@@ -21,7 +21,11 @@
     <div style="display:block;">
         {% for month in calendar_months %}
         <table style="border-collapse:collapse; width:100%; margin-bottom:1em;">
-            <caption style="font-weight:bold; margin-bottom:0.5em;">{{ month['name'] }} {{ month['year'] }}</caption>
+            <caption style="font-weight:bold; margin-bottom:0.5em;">
+                <a href="/calendar_view?mode=month&date={{ month['year'] }}-{{ '%02d' % month['num'] }}-01" style="color:inherit; text-decoration:none;">
+                    {{ month['name'] }} {{ month['year'] }}
+                </a>
+            </caption>
             <thead>
                 <tr>
                     {% for d in ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] %}
@@ -41,11 +45,9 @@
                     {% endif %}
                     <td style="{{ cell_style }}" title="{% if day['episode'] %}{{ day['episode'] }}{% endif %}">
                         {% if day['date'] %}
-                            {% if day['episode'] %}
-                                <a href="/all_episodes?date={{ day['date']|strftime('%Y-%m-%d') }}" style="display:block; color:inherit; text-decoration:none; width:100%; height:100%;">{{ day['date'].day }}</a>
-                            {% else %}
-                                {{ day['date'].day }}
-                            {% endif %}
+                            <a href="/calendar_view?mode=day&date={{ day['date']|strftime('%Y-%m-%d') }}" style="display:flex; align-items:center; justify-content:center; color:inherit; text-decoration:none; width:100%; height:100%;">
+                                <span style="display:inline-block; width:100%; height:100%; text-align:center; vertical-align:middle;">{{ day['date'].day }}</span>
+                            </a>
                         {% endif %}
                     </td>
                     {% endfor %}

@@ -12,28 +12,27 @@
         <div style="flex:1;">
             <h1>Edit Episode</h1>
             <form action="/episode/{{ episode.id }}/edit" method="post">
-                <label for="title">Título:</label>
-                <input type="text" id="title" name="title" value="{{ episode.title }}" required>
-                <br>
-                <label for="description">Descrição:</label>
-                <textarea id="description" name="description">{{ episode.description }}</textarea>
-                <br>
-                <label for="scheduled_date">Data e Hora:</label>
-                <input type="datetime-local" id="scheduled_date" name="scheduled_date" value="{{ episode.scheduled_date|replace(' ', 'T') if episode.scheduled_date else now }}">
-                <br>
-                <label for="type">Tipo:</label>
-                <input type="text" id="type" name="type" value="{{ episode.type }}" placeholder="Tipo">
-                <br>
-                <label for="guest">Convidado:</label>
-                <input type="text" id="guest" name="guest" value="{{ episode.guest }}" placeholder="Convidado">
-                <br>
-                <label for="theme">Tema:</label>
-                <input type="text" id="theme" name="theme" value="{{ episode.theme }}" placeholder="Tema">
-                <br>
-                <label for="announcement">Anúncio:</label>
-                <textarea id="announcement" name="announcement" placeholder="Anúncio">{{ episode.announcement }}</textarea>
-                <br>
-                <button type="submit">Save</button>
+                <label>Título:</label><br>
+                <input type="text" name="title" value="{{ episode.title }}" required><br>
+                <label>Data e Hora:</label><br>
+                {% set dt = episode.scheduled_date.split('T') %}
+                {% set date_part = dt[0] %}
+                {% set time_part = dt[1] if dt|length > 1 else '00:00' %}
+                <input type="datetime-local" name="scheduled_date" value="{{ date_part }}T{{ time_part[:5] }}" required><br>
+                <label>Tipo:</label><br>
+                <select name="type">
+                    <option value="solo"{% if episode.type == 'solo' %} selected{% endif %}>Solo</option>
+                    <option value="guest"{% if episode.type == 'guest' %} selected{% endif %}>Convidado</option>
+                </select><br>
+                <label>Convidado:</label><br>
+                <input type="text" name="guest" value="{{ episode.guest }}"><br>
+                <label>Tema:</label><br>
+                <input type="text" name="theme" value="{{ episode.theme }}"><br>
+                <label>Descrição:</label><br>
+                <textarea name="description">{{ episode.description }}</textarea><br>
+                <label>Anúncio:</label><br>
+                <textarea name="announcement">{{ episode.announcement }}</textarea><br>
+                <button type="submit">Salvar</button>
             </form>
             <a href="/">Back to Podcasts</a>
         </div>

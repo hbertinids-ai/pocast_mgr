@@ -2,19 +2,45 @@ from flask import Blueprint, render_template, request, redirect, url_for
 import sqlite3
 import calendar as pycalendar
 from datetime import datetime, timedelta, date
+import locale
 
 podcast_bp = Blueprint('podcast', __name__)
 DB_PATH = 'database.db'
+@podcast_bp.route('/add_episode', methods=['GET', 'POST'])
+def add_episode_global():
+    from datetime import datetime
+    # Get date from query string, fallback to now
+    date_str = request.args.get('date')
+    try:
+        if date_str:
+            # Accept both YYYY-MM-DD and YYYY-MM-DDTHH:MM
+            if 'T' in date_str:
+                dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
+            else:
+                dt = datetime.strptime(date_str, '%Y-%m-%d')
+        else:
+            dt = datetime.now()
+        scheduled_date = dt.strftime('%Y-%m-%dT%H:%M')
+    except Exception:
+        scheduled_date = datetime.now().strftime('%Y-%m-%dT%H:%M')
 
-@podcast_bp.route('/')
-def index():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS podcasts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, host TEXT NOT NULL, description TEXT)')
-    cursor.execute('SELECT id, title, host, description FROM podcasts')
-    podcasts = [{'id': id, 'title': title, 'host': host, 'description': description} for id, title, host, description in cursor.fetchall()]
-    conn.close()
-    return render_template('index.html', podcasts=podcasts)
+    if request.method == 'POST':
+        title = request.form['title']
+        scheduled_date = request.form['scheduled_date']
+        type_ = request.form.get('type', '')
+        guest = request.form.get('guest', '')
+        theme = request.form.get('theme', '')
+        description = request.form.get('description', '')
+        announcement = request.form.get('announcement', '')
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO episodes (scheduled_date, title, type, guest, theme, description, announcement) VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            (scheduled_date, title, type_, guest, theme, description, announcement))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('podcast.all_episodes'))
+    return render_template('add_episode.html', scheduled_date=scheduled_date)
+
 
 @podcast_bp.route('/add', methods=['POST'])
 def add_podcast():
@@ -69,7 +95,7 @@ def get_calendar_data(offset=0, jump_month=None, jump_year=None):
                         episode_id = ep['id']
                 week_data.append({'date': d if d.month == month else None, 'info': info, 'episode': episode_detail, 'episode_id': episode_id})
             weeks.append(week_data)
-        months.append({'name': month_name, 'year': year, 'weeks': weeks})
+        months.append({'name': month_name, 'year': year, 'num': month, 'weeks': weeks})
     conn.close()
     return months
 
@@ -256,3 +282,74 @@ def add_episode(podcast_id):
         conn.close()
         return redirect(url_for('podcast.podcast_detail', id=podcast_id))
     return render_template('add_episode.html', podcast_id=podcast_id)
+
+@podcast_bp.route('/calendar_view', methods=['GET', 'POST'])
+def calendar_view():
+    import locale
+    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8') if hasattr(locale, 'LC_TIME') else None
+    mode = request.args.get('mode', 'month')
+    selected_date = request.args.get('date')
+    if not selected_date:
+        selected_date = date.today().strftime('%Y-%m-%d')
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    episodes = []
+    calendar_data = {}
+    prev_date = next_date = selected_date
+    if mode == 'day':
+        dt = datetime.strptime(selected_date, '%Y-%m-%d')
+        day_name = dt.strftime('%A')
+        day_num = dt.day
+        month_name = dt.strftime('%B')
+        calendar_data = {'day_name': day_name, 'day_num': day_num, 'month_name': month_name, 'date': selected_date}
+        cursor.execute('SELECT id, scheduled_date, title, type FROM episodes WHERE scheduled_date LIKE ?', (f'{selected_date}%',))
+        episodes = [{'id': eid, 'scheduled_date': sd, 'title': t, 'type': tp} for eid, sd, t, tp in cursor.fetchall()]
+        prev_date = (dt - timedelta(days=1)).strftime('%Y-%m-%d')
+        next_date = (dt + timedelta(days=1)).strftime('%Y-%m-%d')
+    elif mode == 'week':
+        dt = datetime.strptime(selected_date, '%Y-%m-%d')
+        start = dt - timedelta(days=dt.weekday())
+        week_num = dt.isocalendar()[1]
+        month_name = dt.strftime('%B')
+        week_days = [(start + timedelta(days=i)) for i in range(7)]
+        calendar_data = {'week_num': week_num, 'month_name': month_name, 'week_days': week_days}
+        end = start + timedelta(days=6)
+        cursor.execute('SELECT id, scheduled_date, title, type FROM episodes WHERE scheduled_date BETWEEN ? AND ?', (start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')))
+        episodes = [{'id': eid, 'scheduled_date': sd, 'title': t, 'type': tp} for eid, sd, t, tp in cursor.fetchall()]
+        prev_date = (start - timedelta(days=7)).strftime('%Y-%m-%d')
+        next_date = (start + timedelta(days=7)).strftime('%Y-%m-%d')
+    elif mode == 'year':
+        year = int(selected_date[:4])
+        months = [date(year, m, 1) for m in range(1,13)]
+        calendar_data = {'year': year, 'months': months}
+        cursor.execute('SELECT id, scheduled_date, title, type FROM episodes WHERE scheduled_date LIKE ?', (f'{year}%',))
+        episodes = [{'id': eid, 'scheduled_date': sd, 'title': t, 'type': tp} for eid, sd, t, tp in cursor.fetchall()]
+        prev_date = f'{year-1}-01-01'
+        next_date = f'{year+1}-01-01'
+    else:  # month
+        year, month = int(selected_date[:4]), int(selected_date[5:7])
+        month_name = date(year, month, 1).strftime('%B')
+        cal = pycalendar.Calendar(firstweekday=0)
+        weeks = cal.monthdatescalendar(year, month)
+        calendar_data = {'month_name': month_name, 'year': year, 'weeks': weeks}
+        cursor.execute('SELECT id, scheduled_date, title, type FROM episodes WHERE scheduled_date LIKE ?', (f'{year}-{str(month).zfill(2)}%',))
+        episodes = [{'id': eid, 'scheduled_date': sd, 'title': t, 'type': tp} for eid, sd, t, tp in cursor.fetchall()]
+        prev_month = month - 1 if month > 1 else 12
+        prev_year = year if month > 1 else year - 1
+        next_month = month + 1 if month < 12 else 1
+        next_year = year if month < 12 else year + 1
+        prev_date = f'{prev_year}-{str(prev_month).zfill(2)}-01'
+        next_date = f'{next_year}-{str(next_month).zfill(2)}-01'
+    conn.close()
+    return render_template('calendar_view.html', mode=mode, selected_date=selected_date, episodes=episodes, calendar_data=calendar_data, prev_date=prev_date, next_date=next_date)
+
+@podcast_bp.route('/update_episode_date', methods=['POST'])
+def update_episode_date():
+    eid = request.form['episode_id']
+    new_date = request.form['new_date']
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('UPDATE episodes SET scheduled_date=? WHERE id=?', (new_date, eid))
+    conn.commit()
+    conn.close()
+    return 'OK'

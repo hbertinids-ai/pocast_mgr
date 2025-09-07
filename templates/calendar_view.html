@@ -1,0 +1,174 @@
+<!-- templates/calendar_view.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualização de Calendário</title>
+    <link rel="stylesheet" href="/static/custom.css">
+    <style>
+        .calendar-grid { display: grid; gap: 8px; }
+        .calendar-day { min-height: 80px; border: 1px solid #ccc; border-radius: 6px; padding: 4px; background: #f9f9f9; position: relative; }
+        .episode-card { padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; cursor: grab; color: #fff; }
+        .solo { background: #4a90e2 !important; }
+        .guest, .convidado { background: #f5a623 !important; }
+        .calendar-controls { margin-bottom: 1em; }
+        .calendar-label { font-weight: bold; margin-bottom: 0.5em; }
+    </style>
+</head>
+<body>
+    {% include 'menu.html' %}
+    <div class="calendar-controls">
+        <form method="get" action="/calendar_view" style="display:inline-block;">
+            <label>Visualizar:</label>
+            <select name="mode" onchange="this.form.submit()">
+                <option value="day"{% if mode=='day' %} selected{% endif %}>Dia</option>
+                <option value="week"{% if mode=='week' %} selected{% endif %}>Semana</option>
+                <option value="month"{% if mode=='month' %} selected{% endif %}>Mês</option>
+                <option value="year"{% if mode=='year' %} selected{% endif %}>Ano</option>
+            </select>
+            <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+            <a href="/calendar_view?mode={{ mode }}&date={{ prev_date }}" style="padding:2px 8px; margin-left:1em;">&#8592;</a>
+            <a href="/calendar_view?mode={{ mode }}&date={{ next_date }}" style="padding:2px 8px;">&#8594;</a>
+        </form>
+    </div>
+    <div id="calendar-area">
+        {% if mode == 'day' %}
+            <div class="calendar-label">{{ calendar_data.day_name }}, {{ calendar_data.day_num }} de {{ calendar_data.month_name }}</div>
+            <div class="calendar-grid" style="grid-template-columns: repeat(4, 1fr);">
+                {% for hour in range(0, 24) %}
+                    <div class="calendar-day" data-date="{{ calendar_data.date }}T{{ '%02d' % hour }}:00">
+                        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.9em; font-weight:bold; margin-bottom:4px;">
+                            <span>{{ '%02d' % hour }}:00</span>
+                            <a href="/add_episode?date={{ calendar_data.date }}T{{ '%02d' % hour }}:00" title="Criar episódio" style="font-size:1.2em; text-decoration:none; color:#4a90e2; margin-left:4px;">+</a>
+                        </div>
+                        {% for ep in episodes if ep.scheduled_date[:13] == calendar_data.date ~ 'T' ~ '%02d' % hour %}
+                            <a href="/episode/{{ ep.id }}" style="text-decoration:none; color:inherit;">
+                                <div class="episode-card {% if ep.type|lower == 'solo' %}solo{% elif ep.type|lower in ['guest', 'convidado'] %}guest{% endif %}" draggable="true" data-episode-id="{{ ep.id }}">{{ ep.title }}<br><small>{{ ep.scheduled_date }}</small></div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif mode == 'week' %}
+            <div class="calendar-label">Semana {{ calendar_data.week_num }} de {{ calendar_data.month_name }}</div>
+            <div class="calendar-grid" style="grid-template-columns: repeat(7, 1fr);">
+                {% for d in calendar_data.week_days %}
+                    <div class="calendar-day" data-date="{{ d.strftime('%Y-%m-%d') }}">
+                        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.9em; font-weight:bold; margin-bottom:4px;">
+                            <a href="/calendar_view?mode=day&date={{ d.strftime('%Y-%m-%d') }}" style="text-decoration:none; color:inherit;">
+                                <span>{{ d.strftime('%a') }} {{ d.day }}</span>
+                            </a>
+                            <a href="/add_episode?date={{ d.strftime('%Y-%m-%d') }}" title="Criar episódio" style="font-size:1.2em; text-decoration:none; color:#4a90e2; margin-left:4px;">+</a>
+                        </div>
+                        {% for ep in episodes if ep.scheduled_date[:10] == d.strftime('%Y-%m-%d') %}
+                            <a href="/episode/{{ ep.id }}" style="text-decoration:none; color:inherit;">
+                                <div class="episode-card {% if ep.type|lower == 'solo' %}solo{% elif ep.type|lower in ['guest', 'convidado'] %}guest{% endif %}" draggable="true" data-episode-id="{{ ep.id }}" data-episode-time="{{ ep.scheduled_date[11:16] }}">{{ ep.title }}<br><small>{{ ep.scheduled_date }}</small></div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif mode == 'month' %}
+            <div class="calendar-label">{{ calendar_data.month_name }} {{ calendar_data.year }}</div>
+            <div class="calendar-grid" style="display:grid; grid-template-columns: 60px repeat(7, 1fr); width:100%;">
+                {% for week in calendar_data.weeks %}
+                    <div style="display:contents;">
+                        {% set week_num = week[0].isocalendar()[1] %}
+                        <div style="text-align:center; vertical-align:middle; padding:8px 0; border-right:1px solid #ccc; background:#f2f2f2; font-weight:bold;">
+                            <a href="/calendar_view?mode=week&date={{ week[0].strftime('%Y-%m-%d') }}" style="text-decoration:none; color:#4a90e2; font-weight:bold;">{{ week_num }}</a>
+                        </div>
+                        {% for d in week %}
+                            <div class="calendar-day" data-date="{{ d.strftime('%Y-%m-%d') }}">
+                                <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.9em; font-weight:bold; margin-bottom:4px;">
+                                    <a href="/calendar_view?mode=day&date={{ d.strftime('%Y-%m-%d') }}" style="text-decoration:none; color:inherit;">
+                                        <span>{{ d.day }}</span>
+                                    </a>
+                                    <a href="/add_episode?date={{ d.strftime('%Y-%m-%d') }}" title="Criar episódio" style="font-size:1.2em; text-decoration:none; color:#4a90e2; margin-left:4px;">+</a>
+                                </div>
+                                {% for ep in episodes if ep.scheduled_date[:10] == d.strftime('%Y-%m-%d') %}
+                                    <a href="/episode/{{ ep.id }}" style="text-decoration:none; color:inherit;">
+                                        <div class="episode-card {% if ep.type|lower == 'solo' %}solo{% elif ep.type|lower in ['guest', 'convidado'] %}guest{% endif %}" draggable="true" data-episode-id="{{ ep.id }}" data-episode-time="{{ ep.scheduled_date[11:16] }}">{{ ep.title }}<br><small>{{ ep.scheduled_date }}</small></div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif mode == 'year' %}
+            <div class="calendar-label">{{ calendar_data.year }}</div>
+            <div class="calendar-grid" style="grid-template-columns: repeat(4, 1fr);">
+                {% for m in calendar_data.months %}
+                    <div class="calendar-day" data-date="{{ m.strftime('%Y-%m') }}">
+                        <a href="/calendar_view?mode=month&date={{ m.strftime('%Y-%m') }}-01" style="text-decoration:none; color:inherit;">
+                            <div style="font-size:0.9em; font-weight:bold; margin-bottom:4px;">{{ m.strftime('%B') }}</div>
+                        </a>
+                        {% for ep in episodes if ep.scheduled_date[:7] == m.strftime('%Y-%m') %}
+                            <a href="/episode/{{ ep.id }}" style="text-decoration:none; color:inherit;">
+                                <div class="episode-card {% if ep.type|lower == 'solo' %}solo{% elif ep.type|lower in ['guest', 'convidado'] %}guest{% endif %}" draggable="true" data-episode-id="{{ ep.id }}" data-episode-date="{{ ep.scheduled_date }}">{{ ep.title }}<br><small>{{ ep.scheduled_date }}</small></div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <script>
+    document.querySelectorAll('.episode-card').forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('text/plain', card.dataset.episodeId);
+            // Pass the full scheduled_date (YYYY-MM-DDTHH:MM) if available, else fallback
+            let schedDate = card.dataset.episodeDate || (card.querySelector('small') ? card.querySelector('small').innerText : '');
+            e.dataTransfer.setData('episode-date', schedDate);
+            // Also pass the time part for easier access
+            if (card.dataset.episodeTime) {
+                e.dataTransfer.setData('episode-time', card.dataset.episodeTime);
+            }
+        });
+    });
+    document.querySelectorAll('.calendar-day').forEach(day => {
+        day.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+        day.addEventListener('drop', function(e) {
+            e.preventDefault();
+            var episodeId = e.dataTransfer.getData('text/plain');
+            var oldDate = e.dataTransfer.getData('episode-date');
+            var timePart = e.dataTransfer.getData('episode-time');
+            var newDateBase = day.dataset.date; // YYYY-MM-DDTHH:MM for day view, YYYY-MM-DD for week/month, YYYY-MM for year
+            var newDate;
+            if (newDateBase.length === 7 && oldDate && oldDate.length >= 10) {
+                // Year view: newDateBase is YYYY-MM, oldDate is YYYY-MM-DDTHH:MM or YYYY-MM-DD
+                var dayPart = oldDate.substr(8, 2); // get DD from oldDate
+                // If dayPart is not valid, fallback to 01
+                if (!/^[0-9]{2}$/.test(dayPart)) dayPart = '01';
+                // Get time part
+                if (!timePart && oldDate && oldDate.includes('T')) {
+                    timePart = oldDate.split('T')[1];
+                }
+                if (!timePart) {
+                    timePart = '00:00';
+                }
+                newDate = newDateBase + '-' + dayPart + 'T' + timePart;
+            } else if (newDateBase.includes('T')) {
+                newDate = newDateBase;
+            } else {
+                // For week/month views, preserve timePart
+                if (!timePart && oldDate && oldDate.includes('T')) {
+                    timePart = oldDate.split('T')[1];
+                }
+                if (!timePart) {
+                    timePart = '00:00';
+                }
+                newDate = newDateBase + 'T' + timePart;
+            }
+            fetch('/update_episode_date', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'episode_id=' + episodeId + '&new_date=' + newDate
+            }).then(() => { location.reload(); });
+        });
+    });
+    </script>
+</body>
+</html>

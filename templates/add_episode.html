@@ -10,11 +10,11 @@
     {% include 'menu.html' %}
     <div style="max-width:600px; margin:2em auto;">
         <h1>Adicionar Episódio</h1>
-        <form action="/podcast/{{ podcast_id }}/add_episode" method="post">
+            <form action="/add_episode" method="post">
             <label>Título:</label><br>
             <input type="text" name="title" required><br>
             <label>Data e Hora:</label><br>
-            <input type="datetime-local" name="scheduled_date" required><br>
+            <input type="datetime-local" name="scheduled_date" value="{{ scheduled_date }}" required><br>
             <label>Tipo:</label><br>
             <select name="type">
                 <option value="solo">Solo</option>
