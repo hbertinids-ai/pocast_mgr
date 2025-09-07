@@ -1,0 +1,35 @@
+<!-- templates/add_episode.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adicionar Episódio</title>
+    <link rel="stylesheet" href="/static/custom.css">
+</head>
+<body>
+    {% include 'menu.html' %}
+    <div style="max-width:600px; margin:2em auto;">
+        <h1>Adicionar Episódio</h1>
+        <form action="/podcast/{{ podcast_id }}/add_episode" method="post">
+            <label>Título:</label><br>
+            <input type="text" name="title" required><br>
+            <label>Data e Hora:</label><br>
+            <input type="datetime-local" name="scheduled_date" required><br>
+            <label>Tipo:</label><br>
+            <select name="type">
+                <option value="solo">Solo</option>
+                <option value="guest">Convidado</option>
+            </select><br>
+            <label>Convidado:</label><br>
+            <input type="text" name="guest"><br>
+            <label>Tema:</label><br>
+            <input type="text" name="theme"><br>
+            <label>Descrição:</label><br>
+            <textarea name="description"></textarea><br>
+            <label>Anúncio:</label><br>
+            <input type="text" name="announcement"><br>
+            <button type="submit">Adicionar</button>
+        </form>
+    </div>
+</body>
+</html>

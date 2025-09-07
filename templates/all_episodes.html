@@ -22,7 +22,9 @@
                     {% for episode in episodes %}
                     <tr>
                         <td>{{ episode.scheduled_date|replace('T', ' ') }}</td>
-                        <td>{{ episode.title }}</td>
+                        <td>
+                            <a href="/episode/{{ episode.id }}">{{ episode.title }}</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

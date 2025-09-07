@@ -30,6 +30,11 @@
                 {% endfor %}
             </ul>
             <a href="/">Back to Podcasts</a>
+            <a href="/podcast/{{ podcast.id }}/edit">Editar Podcast</a>
+            <a href="/podcast/{{ podcast.id }}/add_episode" style="margin-left:2em;">Adicionar Episódio</a>
+            <form action="/podcast/{{ podcast.id }}/delete" method="post" style="display:inline; margin-left:1em;">
+                <button type="submit">Excluir Podcast</button>
+            </form>
         </div>
         <div style="margin-left:2em;">
             {% include 'calendar.html' %}

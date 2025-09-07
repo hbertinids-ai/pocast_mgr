@@ -1,0 +1,28 @@
+<!-- templates/edit_podcast.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Podcast</title>
+    <link rel="stylesheet" href="/static/custom.css">
+</head>
+<body>
+    {% include 'menu.html' %}
+    <div style="max-width:600px; margin:2em auto;">
+        {% if podcast %}
+            <h1>Editar Podcast</h1>
+            <form action="/podcast/{{ podcast.id }}/edit" method="post">
+                <label>Título:</label><br>
+                <input type="text" name="title" value="{{ podcast.title }}" required><br>
+                <label>Apresentador:</label><br>
+                <input type="text" name="host" value="{{ podcast.host }}" required><br>
+                <label>Descrição:</label><br>
+                <textarea name="description">{{ podcast.description }}</textarea><br>
+                <button type="submit">Salvar</button>
+            </form>
+        {% else %}
+            <h2>Podcast não encontrado.</h2>
+        {% endif %}
+    </div>
+</body>
+</html>

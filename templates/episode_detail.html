@@ -1,0 +1,28 @@
+<!-- templates/episode_detail.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes do Episódio</title>
+    <link rel="stylesheet" href="/static/custom.css">
+</head>
+<body>
+    {% include 'menu.html' %}
+    <div style="max-width:600px; margin:2em auto;">
+        {% if episode %}
+            <h1>{{ episode.title }}</h1>
+            <p><strong>Data:</strong> {{ episode.scheduled_date }}</p>
+            <p><strong>Tipo:</strong> {{ episode.type }}</p>
+            {% if episode.guest %}<p><strong>Convidado:</strong> {{ episode.guest }}</p>{% endif %}
+            <p><strong>Tema:</strong> {{ episode.theme }}</p>
+            <p><strong>Descrição:</strong> {{ episode.description }}</p>
+            <p><strong>Anúncio:</strong> {{ episode.announcement }}</p>
+            <a href="/episode/{{ episode.id }}/edit">Editar Episódio</a>
+            <a href="/podcast/{{ episode.podcast_id }}" style="margin-left:2em;">Voltar ao Podcast</a>
+        {% else %}
+            <h2>Episódio não encontrado.</h2>
+            <a href="/all_episodes">Ver todos os episódios</a>
+        {% endif %}
+    </div>
+</body>
+</html>
