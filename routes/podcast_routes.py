@@ -289,8 +289,8 @@ def add_episode(podcast_id):
 
 @podcast_bp.route('/calendar_view', methods=['GET', 'POST'])
 def calendar_view():
-    import locale
-    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8') if hasattr(locale, 'LC_TIME') else None
+    # import locale
+    # locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8') if hasattr(locale, 'LC_TIME') else None
     mode = request.args.get('mode', 'month')
     selected_date = request.args.get('date')
     if not selected_date:
