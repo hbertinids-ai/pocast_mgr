@@ -10,17 +10,56 @@
     {% include 'menu.html' %}
     <div style="max-width:600px; margin:2em auto;">
         {% if episode %}
-            <h1>{{ episode.title }}</h1>
-            <p><strong>Data:</strong> {{ episode.scheduled_date|replace('T', ' ') }}</p>
-            <p><strong>Tipo:</strong> {{ episode.type }}</p>
-            {% if episode.guest %}<p><strong>Convidado:</strong> {{ episode.guest }}</p>{% endif %}
-            <p><strong>Tema:</strong> {{ episode.theme }}</p>
-            <p><strong>Descrição:</strong> {{ episode.description }}</p>
-            <p><strong>Anúncio:</strong> {{ episode.announcement }}</p>
-            <a href="/episode/{{ episode.id }}/edit">Editar Episódio</a>
+        <div style="background:#fff; border-radius:12px; box-shadow:0 2px 16px #e0e0e0; padding:2em;">
+            <h1 style="font-size:2em; margin-bottom:1em; color:#4a90e2; text-align:center;">{{ episode.title }}</h1>
+            <div style="display:flex; flex-wrap:wrap; gap:1.2em; margin-bottom:1.5em;">
+                <div style="flex:1; min-width:140px;">
+                    <span style="font-weight:600; color:#555;">Data e Hora</span><br>
+                    <span style="font-size:1.1em;">{{ episode.scheduled_date|replace('T', ' ') }}</span>
+                </div>
+                <div style="flex:1; min-width:140px; text-align:right;">
+                    {% if episode.type == 'Convidado' %}
+                        <span style="font-size:1.1em; color:#f5a623; font-weight:600;">{{ episode.type }}</span>
+                    {% elif episode.type == 'Solo' %}
+                        <span style="font-size:1.1em; color:#4a90e2; font-weight:600;">{{ episode.type }}</span>
+                    {% else %}
+                        <span style="font-size:1.1em; color:#555; font-weight:600;">{{ episode.type }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="margin-bottom:1em;">
+                <span style="font-weight:600; color:#555;">Convidado</span><br>
+                <span>{{ episode.guest }}</span>
+            </div>
+            <div style="margin-bottom:1em;">
+                <span style="font-weight:600; color:#555;">Tema</span><br>
+                <span>{{ episode.theme }}</span>
+            </div>
+            <div style="margin-bottom:1em;">
+                <span style="font-weight:600; color:#555;">Descrição</span><br>
+                <span>{{ episode.description }}</span>
+            </div>
+            <div style="margin-bottom:1em;">
+                <span style="font-weight:600; color:#555;">Anúncio</span><br>
+                <span>{{ episode.announcement }}</span>
+            </div>
+            <div style="text-align:center; margin-top:2em;">
+                <a href="/episode/{{ episode.id }}/edit" style="background:#4a90e2; color:#fff; border:none; padding:0.8em 2em; border-radius:6px; font-size:1.1em; font-weight:600; text-decoration:none; transition:background 0.2s; margin-right:1em;">Editar Episódio</a>
+                <a href="/calendar_view?mode=month&date={{ episode.scheduled_date[:10] }}" style="background:#f5a623; color:#fff; border:none; padding:0.8em 1.2em; border-radius:6px; font-size:1.1em; font-weight:600; text-decoration:none; transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center;" title="Ver no Calendário">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2" style="margin-right:0;">
+                        <rect x="3" y="5" width="18" height="16" rx="2" fill="#f5a623" stroke="white"/>
+                        <line x1="16" y1="3" x2="16" y2="7" stroke="white"/>
+                        <line x1="8" y1="3" x2="8" y2="7" stroke="white"/>
+                        <line x1="3" y1="11" x2="21" y2="11" stroke="white"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
         {% else %}
-            <h2>Episódio não encontrado.</h2>
-            <a href="/all_episodes">Ver todos os episódios</a>
+            <div style="background:#fff; border-radius:12px; box-shadow:0 2px 16px #e0e0e0; padding:2em; text-align:center;">
+                <h2 style="color:#d9534f;">Episódio não encontrado.</h2>
+                <a href="/all_episodes" style="background:#4a90e2; color:#fff; border:none; padding:0.8em 2em; border-radius:6px; font-size:1.1em; font-weight:600; text-decoration:none; transition:background 0.2s;">Ver todos os episódios</a>
+            </div>
         {% endif %}
     </div>
 </body>

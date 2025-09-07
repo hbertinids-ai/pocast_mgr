@@ -8,36 +8,41 @@
 </head>
 <body>
     {% include 'menu.html' %}
-    <div style="display:flex; flex-direction:row; align-items:flex-start;">
-        <div style="flex:1;">
-            <h1>Edit Episode</h1>
-            <form action="/episode/{{ episode.id }}/edit" method="post">
-                <label>Título:</label><br>
-                <input type="text" name="title" value="{{ episode.title }}" required><br>
-                <label>Data e Hora:</label><br>
-                {% set dt = episode.scheduled_date.split('T') %}
-                {% set date_part = dt[0] %}
-                {% set time_part = dt[1] if dt|length > 1 else '00:00' %}
-                <input type="datetime-local" name="scheduled_date" value="{{ date_part }}T{{ time_part[:5] }}" required><br>
-                <label>Tipo:</label><br>
-                <select name="type">
-                    <option value="solo"{% if episode.type == 'solo' %} selected{% endif %}>Solo</option>
-                    <option value="guest"{% if episode.type == 'guest' %} selected{% endif %}>Convidado</option>
-                </select><br>
-                <label>Convidado:</label><br>
-                <input type="text" name="guest" value="{{ episode.guest }}"><br>
-                <label>Tema:</label><br>
-                <input type="text" name="theme" value="{{ episode.theme }}"><br>
-                <label>Descrição:</label><br>
-                <textarea name="description">{{ episode.description }}</textarea><br>
-                <label>Anúncio:</label><br>
-                <textarea name="announcement">{{ episode.announcement }}</textarea><br>
-                <button type="submit">Salvar</button>
+    <div style="max-width:600px; margin:2em auto;">
+        <div style="background:#fff; border-radius:12px; box-shadow:0 2px 16px #e0e0e0; padding:2em;">
+            <h1 style="font-size:2em; margin-bottom:1em; color:#4a90e2; text-align:center;">Editar Episódio</h1>
+            <form action="/episode/{{ episode.id }}/edit" method="post" style="display:flex; flex-direction:column; gap:1.2em;">
+                <div>
+                    <label for="title" style="font-weight:600;">Título</label><br>
+                    <input type="text" name="title" id="title" value="{{ episode.title }}" required style="width:100%; padding:0.7em; border-radius:6px; border:1px solid #ccc;">
+                </div>
+                <div style="display:flex; gap:1em; align-items:flex-end;">
+                    <div style="width:100%; min-width:140px; max-width:100%; display:flex; flex-direction:column;">
+                        <label for="scheduled_date" style="font-weight:600;">Data e Hora</label><br>
+                        {% set dt = episode.scheduled_date.split('T') %}
+                        {% set date_part = dt[0] %}
+                        {% set time_part = dt[1] if dt|length > 1 else '00:00' %}
+                        <input type="datetime-local" name="scheduled_date" id="scheduled_date" value="{{ date_part }}T{{ time_part[:5] }}" required style="width:100%; height:2.7em; padding:0.4em; border-radius:6px; border:1px solid #ccc; font-size:1em;">
+                    </div>
+                </div>
+                <div>
+                    <label for="guest" style="font-weight:600;">Convidados</label><br>
+                    <input type="text" name="guest" id="guest" value="{{ episode.guest }}" style="width:100%; padding:0.7em; border-radius:6px; border:1px solid #ccc;">
+                </div>
+                <div>
+                    <label for="theme" style="font-weight:600;">Tema</label><br>
+                    <input type="text" name="theme" id="theme" value="{{ episode.theme }}" style="width:100%; padding:0.7em; border-radius:6px; border:1px solid #ccc;">
+                </div>
+                <div>
+                    <label for="description" style="font-weight:600;">Descrição</label><br>
+                    <textarea name="description" id="description" rows="3" style="width:100%; padding:0.7em; border-radius:6px; border:1px solid #ccc;">{{ episode.description }}</textarea>
+                </div>
+                <div>
+                    <label for="announcement" style="font-weight:600;">Anúncio</label><br>
+                    <textarea name="announcement" id="announcement" rows="3" style="width:100%; padding:0.7em; border-radius:6px; border:1px solid #ccc;">{{ episode.announcement }}</textarea>
+                </div>
+                <button type="submit" style="background:#4a90e2; color:#fff; border:none; padding:0.9em 2em; border-radius:6px; font-size:1.1em; font-weight:600; cursor:pointer; transition:background 0.2s;">Salvar</button>
             </form>
-            <a href="/">Back to Podcasts</a>
-        </div>
-        <div style="margin-left:2em;">
-            {% include 'calendar.html' %}
         </div>
     </div>
 </body>

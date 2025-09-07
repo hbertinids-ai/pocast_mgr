@@ -125,10 +125,10 @@ def all_episodes():
     cursor = conn.cursor()
     try:
         if date_filter:
-            cursor.execute('SELECT id, scheduled_date, title FROM episodes WHERE scheduled_date LIKE ? ORDER BY scheduled_date ASC', (f'{date_filter}%',))
+            cursor.execute('SELECT id, scheduled_date, title, type FROM episodes WHERE scheduled_date LIKE ? ORDER BY scheduled_date ASC', (f'{date_filter}%',))
         else:
-            cursor.execute('SELECT id, scheduled_date, title FROM episodes ORDER BY scheduled_date ASC')
-        episodes = [{'id': eid, 'scheduled_date': sd, 'title': t} for eid, sd, t in cursor.fetchall()]
+            cursor.execute('SELECT id, scheduled_date, title, type FROM episodes ORDER BY scheduled_date ASC')
+        episodes = [{'id': eid, 'scheduled_date': sd, 'title': t, 'type': tp} for eid, sd, t, tp in cursor.fetchall()]
     except sqlite3.OperationalError:
         episodes = []
     conn.close()
@@ -172,16 +172,20 @@ def edit_episode(id):
     if request.method == 'POST':
         title = request.form['title']
         scheduled_date = request.form['scheduled_date']
-        type_ = request.form.get('type', '')
         guest = request.form.get('guest', '')
         theme = request.form.get('theme', '')
         description = request.form.get('description', '')
         announcement = request.form.get('announcement', '')
+        # Auto-set type
+        if guest.strip():
+            type_ = 'Convidado'
+        else:
+            type_ = 'Solo'
         cursor.execute('''UPDATE episodes SET title=?, scheduled_date=?, type=?, guest=?, theme=?, description=?, announcement=? WHERE id=?''',
             (title, scheduled_date, type_, guest, theme, description, announcement, id))
         conn.commit()
         conn.close()
-        return redirect(url_for('podcast.podcast_detail', id=request.form.get('podcast_id', 1)))
+        return redirect(url_for('podcast.episode_detail', id=id))
     cursor.execute('SELECT id, podcast_id, scheduled_date, title, type, guest, theme, description, announcement FROM episodes WHERE id=?', (id,))
     row = cursor.fetchone()
     conn.close()
