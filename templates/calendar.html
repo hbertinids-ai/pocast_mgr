@@ -1,0 +1,57 @@
+<!-- templates/calendar.html -->
+{% set colors = {'none': '#fff', 'solo': '#4a90e2', 'guest': '#f5a623'} %}
+<div style="width:340px; margin-left:2em;">
+    <h3>Calendário de Episódios</h3>
+    <form method="get" action="" style="margin-bottom:1em; display:flex; gap:1em; align-items:center;">
+        <input type="hidden" name="offset" value="{{ offset }}">
+        <button type="submit" name="calnav" value="prev" style="padding:2px 8px;">&#8592; Anterior</button>
+        <button type="submit" name="calnav" value="next" style="padding:2px 8px;">Próximo &#8594;</button>
+        <select name="jump_month" style="margin-left:1em;">
+            {% for m in range(1,13) %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+        </select>
+        <select name="jump_year">
+            {% for y in range(today.year-2, today.year+3) %}
+            <option value="{{ y }}">{{ y }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" name="calnav" value="jump" style="padding:2px 8px;">Ir</button>
+    </form>
+    <div style="display:block;">
+        {% for month in calendar_months %}
+        <table style="border-collapse:collapse; width:100%; margin-bottom:1em;">
+            <caption style="font-weight:bold; margin-bottom:0.5em;">{{ month['name'] }} {{ month['year'] }}</caption>
+            <thead>
+                <tr>
+                    {% for d in ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] %}
+                    <th style="padding:2px; font-size:0.9em; border:1px solid #ccc;">{{ d }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in month['weeks'] %}
+                <tr>
+                    {% for day in week %}
+                    {% set info = day['info'] %}
+                    {% set is_today = day['date'] and day['date'] == today %}
+                    {% set cell_style = "width:32px; height:32px; text-align:center; background:%s; border:1px solid #ccc; border-radius:4px; font-size:0.9em;" % colors[info] %}
+                    {% if is_today %}
+                        {% set cell_style = cell_style + ' box-shadow:0 0 0 2px #222 inset; font-weight:bold;' %}
+                    {% endif %}
+                    <td style="{{ cell_style }}" title="{% if day['episode'] %}{{ day['episode'] }}{% endif %}">
+                        {% if day['date'] %}{{ day['date'].day }}{% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endfor %}
+    </div>
+    <div style="margin-top:1em; font-size:0.9em;">
+        <span style="background:#fff; padding:2px 8px; border:1px solid #ccc; border-radius:4px;">Sem episódio</span>
+        <span style="background:#4a90e2; color:#fff; padding:2px 8px; border-radius:4px; margin-left:1em;">Solo</span>
+        <span style="background:#f5a623; color:#fff; padding:2px 8px; border-radius:4px; margin-left:1em;">Convidado</span>
+    </div>
+</div>

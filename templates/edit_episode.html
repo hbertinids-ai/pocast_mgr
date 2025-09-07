@@ -1,0 +1,45 @@
+<!-- templates/edit_episode.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Episode</title>
+    <link rel="stylesheet" href="/static/custom.css">
+</head>
+<body>
+    {% include 'menu.html' %}
+    <div style="display:flex; flex-direction:row; align-items:flex-start;">
+        <div style="flex:1;">
+            <h1>Edit Episode</h1>
+            <form action="/episode/{{ episode.id }}/edit" method="post">
+                <label for="title">Título:</label>
+                <input type="text" id="title" name="title" value="{{ episode.title }}" required>
+                <br>
+                <label for="description">Descrição:</label>
+                <textarea id="description" name="description">{{ episode.description }}</textarea>
+                <br>
+                <label for="scheduled_date">Data e Hora:</label>
+                <input type="datetime-local" id="scheduled_date" name="scheduled_date" value="{{ episode.scheduled_date|replace(' ', 'T') if episode.scheduled_date else now }}">
+                <br>
+                <label for="type">Tipo:</label>
+                <input type="text" id="type" name="type" value="{{ episode.type }}" placeholder="Tipo">
+                <br>
+                <label for="guest">Convidado:</label>
+                <input type="text" id="guest" name="guest" value="{{ episode.guest }}" placeholder="Convidado">
+                <br>
+                <label for="theme">Tema:</label>
+                <input type="text" id="theme" name="theme" value="{{ episode.theme }}" placeholder="Tema">
+                <br>
+                <label for="announcement">Anúncio:</label>
+                <textarea id="announcement" name="announcement" placeholder="Anúncio">{{ episode.announcement }}</textarea>
+                <br>
+                <button type="submit">Save</button>
+            </form>
+            <a href="/">Back to Podcasts</a>
+        </div>
+        <div style="margin-left:2em;">
+            {% include 'calendar.html' %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!-- templates/podcast_detail.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ podcast.title }} - Details</title>
+    <link rel="stylesheet" href="/static/custom.css">
+</head>
+<body>
+    {% include 'menu.html' %}
+    <div style="display:flex; flex-direction:row; align-items:flex-start;">
+        <div style="flex:1;">
+            <h1>{{ podcast.title }} by {{ podcast.host }}</h1>
+            <p>{{ podcast.description }}</p>
+            <h2>Episodes</h2>
+            <ul>
+                {% for episode in episodes %}
+                <li>
+                    <strong>{{ episode.title }}</strong> ({{ episode.scheduled_date }})<br>
+                    <em>Tipo:</em> {{ episode.type }}<br>
+                    {% if episode.guest %}<em>Convidado:</em> {{ episode.guest }}<br>{% endif %}
+                    <em>Tema:</em> {{ episode.theme }}<br>
+                    <em>Descrição:</em> {{ episode.description }}<br>
+                    <em>Anúncio:</em> {{ episode.announcement }}<br>
+                    <a href="/episode/{{ episode.id }}/edit">Edit</a>
+                    <form action="/episode/{{ episode.id }}/delete" method="post" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="/">Back to Podcasts</a>
+        </div>
+        <div style="margin-left:2em;">
+            {% include 'calendar.html' %}
+        </div>
+    </div>
+</body>
+</html>
