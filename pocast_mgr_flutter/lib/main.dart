@@ -4,16 +4,17 @@ import 'dart:convert';
 
 void main() => runApp(const MyApp());
 
-
 class Episode {
+  final int id;
   final String title;
   final String scheduledDate;
   final String type;
 
-  Episode({required this.title, required this.scheduledDate, required this.type});
+  Episode({required this.id, required this.title, required this.scheduledDate, required this.type});
 
   factory Episode.fromJson(Map<String, dynamic> json) {
     return Episode(
+      id: json['id'] ?? 0,
       title: json['title'] ?? '',
       scheduledDate: json['scheduled_date'] ?? '',
       type: json['type'] ?? '',
@@ -80,7 +81,7 @@ class MyApp extends StatelessWidget {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(child: Text('Error: \\${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text('No episodes found.'));
             } else {
@@ -112,12 +113,23 @@ class MyApp extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    ep.title,
-                                    style: TextStyle(
-                                      color: getTypeColor(ep.type),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => EpisodeDetailPage(episodeId: ep.id),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      ep.title,
+                                      style: TextStyle(
+                                        color: getTypeColor(ep.type),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                        decoration: TextDecoration.underline,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -163,6 +175,128 @@ class MyApp extends StatelessWidget {
             }
           },
         ),
+      ),
+    );
+  }
+}
+
+class EpisodeDetailPage extends StatelessWidget {
+  final int episodeId;
+  const EpisodeDetailPage({super.key, required this.episodeId});
+
+  Future<Map<String, dynamic>> fetchEpisodeDetail() async {
+    final response = await http.get(Uri.parse('http://127.0.0.1:5010/api/view_episode/$episodeId'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['episode'] ?? {};
+    } else {
+      throw Exception('Failed to load episode detail');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Episode Detail')),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: fetchEpisodeDetail(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: \\${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Episode not found.'));
+          } else {
+            final ep = snapshot.data!;
+            return Center(
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                margin: const EdgeInsets.all(24),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ep['title'] ?? '',
+                        style: TextStyle(
+                          color: getTypeColor(ep['type'] ?? ''),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 26,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            (ep['scheduled_date'] ?? '').replaceAll('T', ' '),
+                            style: TextStyle(color: Colors.grey[700], fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      if ((ep['type'] ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 14.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: getTypeColor(ep['type'] ?? '').withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              ep['type'] ?? '',
+                              style: TextStyle(
+                                color: getTypeColor(ep['type'] ?? ''),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if ((ep['guest'] ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Text(
+                            'Guest: ' + ep['guest'],
+                            style: const TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
+                        ),
+                      if ((ep['theme'] ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Text(
+                            'Theme: ' + ep['theme'],
+                            style: const TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
+                        ),
+                      if ((ep['description'] ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Text(
+                            'Description: ' + ep['description'],
+                            style: const TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
+                        ),
+                      if ((ep['announcement'] ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Text(
+                            'Announcement: ' + ep['announcement'],
+                            style: const TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }

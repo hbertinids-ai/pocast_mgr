@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 import sqlite3
 import calendar as pycalendar
@@ -7,6 +6,27 @@ import locale
 
 podcast_bp = Blueprint('podcast', __name__)
 DB_PATH = 'database.db'
+
+@podcast_bp.route('/api/view_episode/<int:id>')
+def api_view_episode(id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, scheduled_date, title, type, guest, theme, description, announcement FROM episodes WHERE id=?', (id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'error': 'Episode not found'}), 404
+    episode = {
+        'id': row[0],
+        'scheduled_date': row[1],
+        'title': row[2],
+        'type': row[3],
+        'guest': row[4],
+        'theme': row[5],
+        'description': row[6],
+        'announcement': row[7]
+    }
+    return jsonify({'episode': episode})
 
 @podcast_bp.route('/api/all_episodes')
 def api_all_episodes():
