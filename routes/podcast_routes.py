@@ -6,6 +6,19 @@ import locale
 
 podcast_bp = Blueprint('podcast', __name__)
 DB_PATH = 'database.db'
+
+@podcast_bp.route('/search')
+def search():
+    query = request.args.get('q', '').strip()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    results = []
+    if query:
+        cursor.execute("SELECT id, scheduled_date, title, type FROM episodes WHERE title LIKE ? OR guest LIKE ? OR theme LIKE ? OR description LIKE ? ORDER BY scheduled_date ASC", (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+        results = [{'id': eid, 'scheduled_date': sd, 'title': t, 'type': tp} for eid, sd, t, tp in cursor.fetchall()]
+    conn.close()
+    return render_template('search_results.html', query=query, results=results)
+DB_PATH = 'database.db'
 @podcast_bp.route('/add_episode', methods=['GET', 'POST'])
 def add_episode_global():
     from datetime import datetime
