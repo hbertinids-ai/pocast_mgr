@@ -457,6 +457,13 @@ class EpisodeListForDayPage extends StatelessWidget {
             child: ListTile(
               title: Text(ep.title),
               subtitle: Text('${ep.type} • ${ep.scheduledDate}'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => EpisodeDetailPage(episodeId: ep.id),
+                  ),
+                );
+              },
             ),
           );
         },
