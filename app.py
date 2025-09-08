@@ -1,8 +1,11 @@
+
 from flask import Flask, redirect
 from routes.podcast_routes import podcast_bp
 from datetime import date
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 app.register_blueprint(podcast_bp)
 
 @app.context_processor
